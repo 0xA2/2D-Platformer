@@ -1,6 +1,7 @@
 import pygame
 
 from support import importFolder
+from time import time
 
 class Player(pygame.sprite.Sprite):
 	def __init__(self, pos):
@@ -22,7 +23,10 @@ class Player(pygame.sprite.Sprite):
 		self.doubleJump = True
 		self.jumpCount = 0
 		self.attackFlag = False
+		self.attackStart = 0
 		self.blockFlag = False
+		self.cooldown = False
+		self.cooldownTimer = 0
 
 		# Player Status
 		self.status = 'idle'
@@ -72,23 +76,26 @@ class Player(pygame.sprite.Sprite):
 	def getInput(self):
 		keys = pygame.key.get_pressed()
 
+		# Attacking
+		if keys[pygame.K_u] and self.onGround and not self.status == 'run' and not self.status == 'block' and not self.cooldown:
+				self.attackStart = time()
+				self.attackFlag = True
+				self.cooldownTimer = time()
+				self.cooldown = True
+
+		# Blocking
+		if keys[pygame.K_i] and self.onGround and not self.status == 'run' and not self.status == 'attack' and not self.cooldown:
+			self.blockFlag = True
+
 		# Moving
-		if keys[pygame.K_a]:
+		if keys[pygame.K_a] and not self.attackFlag and not self.blockFlag:
 			self.direction.x = -1
 			self.facingRight = False
-		elif keys[pygame.K_d]:
+		elif keys[pygame.K_d] and not self.attackFlag and not self.blockFlag:
 			self.direction.x = 1
 			self.facingRight = True
 		else:
 			self.direction.x = 0
-
-		# Attacking
-		if keys[pygame.K_u] and self.onGround and not self.status == 'run':
-			self.attackFlag = True
-
-		# Blocking
-		if keys[pygame.K_i] and self.onGround and not self.status == 'run':
-			self.blockFlag = True
 
 		# Jumping
 		if keys[pygame.K_SPACE] and self.onGround and not self.attackFlag:
@@ -119,14 +126,22 @@ class Player(pygame.sprite.Sprite):
 				self.status = 'idle'
 
 		# Player is attacking
+		curTime = time()
 		if self.attackFlag:
 			self.status = 'attack'
-			self.attackFlag = False
+			diffAttack = curTime - self.attackStart
+			if diffAttack > 0.20:
+				self.attackFlag = False
+
 
 		# Player is blocking
 		if self.blockFlag:
 			self.status = 'block'
 			self.blockFlag = False
+
+		diffCooldown = curTime - self.cooldownTimer
+		if diffCooldown > 0.60:
+			self.cooldown = False
 
 
 		#print (self.status)

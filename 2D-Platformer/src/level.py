@@ -36,6 +36,10 @@ class Level:
 					tile = Tile((x,y), tileSize, 'gray')
 					self.tiles.add(tile)
 
+				if layout[r][c] == 'N':
+					tile = Tile((x,y), tileSize, 'red')
+					self.tiles.add(tile)
+
 				# Place player
 				if layout[r][c] == 'P':
 					playerSprite = Player((x,y))
